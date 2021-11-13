@@ -15,6 +15,7 @@ import com.android.example.myapplication.models.ProductData
 import com.android.example.myapplication.models.ProductTypeData
 import com.android.example.myapplication.models.RequestProductData
 import com.android.example.myapplication.retrofit.ApiClient.apiService
+import com.android.example.myapplication.utils.NetworkHelper
 import com.android.example.myapplication.viewmodels.ProductsViewModel
 import com.android.example.myapplication.viewmodels.ViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: ProductsViewModel
     private lateinit var listTypeString: ArrayList<String>
     private lateinit var listType: ArrayList<ProductTypeData>
+    private lateinit var networkHelper: NetworkHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,9 +42,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         listTypeString = ArrayList()
         listType = ArrayList()
+        networkHelper = NetworkHelper(this)
 
+//        if (networkHelper.isNetworkConnected()){
         viewModel =
-            ViewModelProvider(this, ViewModelFactory(apiService))[ProductsViewModel::class.java]
+            ViewModelProvider(
+                this,
+                ViewModelFactory(apiService, networkHelper)
+            )[ProductsViewModel::class.java]
 
         viewModel.productTypes.observe(this, {
             it.forEach { productType ->
@@ -50,6 +57,8 @@ class MainActivity : AppCompatActivity() {
                 listType.add(productType)
             }
         })
+//        }
+
 
         adapter = ProductAdapter()
         binding.rv.setHasFixedSize(true)

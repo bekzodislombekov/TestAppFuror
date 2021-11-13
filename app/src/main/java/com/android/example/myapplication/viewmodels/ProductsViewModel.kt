@@ -9,9 +9,11 @@ import androidx.paging.cachedIn
 import com.android.example.myapplication.models.ProductTypeData
 import com.android.example.myapplication.paging.ProductDataSource
 import com.android.example.myapplication.retrofit.ApiService
+import com.android.example.myapplication.utils.NetworkHelper
 import kotlinx.coroutines.launch
 
 class ProductsViewModel(
+    private val networkHelper: NetworkHelper,
     private val apiService: ApiService
 ) : ViewModel() {
 
@@ -21,13 +23,18 @@ class ProductsViewModel(
         getProductTypes()
     }
 
-    private fun getProductTypes() = viewModelScope.launch {
-        productTypes.postValue(apiService.getProductTypes())
+    private fun getProductTypes() {
+        if (networkHelper.isNetworkConnected()) {
+            viewModelScope.launch {
+                productTypes.postValue(apiService.getProductTypes())
+            }
+        } else {
+            productTypes.postValue(ArrayList())
+        }
     }
 
     val products = Pager(PagingConfig(10, maxSize = 31)) {
-        ProductDataSource(apiService)
+        ProductDataSource(apiService,networkHelper)
     }.flow.cachedIn(viewModelScope)
-
 
 }
